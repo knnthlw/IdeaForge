@@ -105,12 +105,7 @@ async function callClaude(messages) {
     })
   });
 
-  let data = {};
-  try {
-    data = await res.json();
-  } catch {
-    data = {};
-  }
+  const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
     const message =
@@ -118,20 +113,27 @@ async function callClaude(messages) {
       data?.error ||
       data?.message ||
       `HTTP ${res.status}`;
-
-    throw new Error(
-      typeof message === "string" ? message : JSON.stringify(message)
-    );
+    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
   }
 
-  if (data?.content && Array.isArray(data.content)) {
-    return data.content
-      .filter(block => block.type === "text")
+  console.log("Anthropic raw response:", data);
+
+  if (Array.isArray(data?.content)) {
+    const text = data.content
+      .filter(block => block && block.type === "text")
       .map(block => block.text)
       .join("");
+
+    if (typeof text === "string" && text.trim()) {
+      return text;
+    }
   }
 
-  throw new Error(`Unexpected response: ${JSON.stringify(data)}`);
+  if (typeof data?.completion === "string") {
+    return data.completion;
+  }
+
+  throw new Error(`Unexpected response shape: ${JSON.stringify(data)}`);
 }
 
 async function generateSummary(ideaTitle, response) {
