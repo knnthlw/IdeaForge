@@ -13,7 +13,24 @@ const TYPE_ICONS={process:"⚙️",technology:"💡",culture:"🤝"};
 
 // ── ANTHROPIC API KEY ─────────────────────────────────────────────────────
 // Add your Anthropic API key here to enable the AI conversation
+const response = await fetch("/api/anthropic", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    model: "claude-3-haiku-20240307",
+    max_tokens: 800,
+    messages: [
+      {
+        role: "user",
+        content: prompt
+      }
+    ]
+  })
+});
 
+const data = await response.json();
 
 function generateThumbnailSvg(type, title="") {
   const cfg = {
