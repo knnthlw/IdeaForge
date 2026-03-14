@@ -11,27 +11,6 @@ const TYPE_LABELS={process:"Process Improvement",technology:"Technology / Automa
 const TYPE_COLORS={process:C.gold,technology:C.green,culture:C.ice};
 const TYPE_ICONS={process:"⚙️",technology:"💡",culture:"🤝"};
 
-// ── ANTHROPIC API KEY ─────────────────────────────────────────────────────
-// Add your Anthropic API key here to enable the AI conversation
-const response = await fetch("/api/anthropic", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    model: "claude-3-haiku-20240307",
-    max_tokens: 800,
-    messages: [
-      {
-        role: "user",
-        content: prompt
-      }
-    ]
-  })
-});
-
-const data = await response.json();
-
 function generateThumbnailSvg(type, title="") {
   const cfg = {
     process:{ bg1:"#1A1000", bg2:"#3A2800", accent:C.gold, label:"PROCESS" },
@@ -94,17 +73,10 @@ Warmly greet the person, reference the idea by name, acknowledge it hasn't had u
 }
 
 async function callClaude(messages) {
-  const key = ANTHROPIC_API_KEY;
-  if (!key) {
-    throw new Error("No API key configured. Add VITE_ANTHROPIC_API_KEY to your .env file.");
-  }
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("/api/anthropic", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true"
+      "Content-Type": "application/json"
     },
     body: JSON.stringify({
       model: "claude-sonnet-4-20250514",
@@ -112,14 +84,20 @@ async function callClaude(messages) {
       messages: messages.map(m => ({ role: m.role, content: m.content }))
     })
   });
+
+  const data = await res.json().catch(() => ({}));
+
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${res.status}`);
+    throw new Error(data.error || data.message || `HTTP ${res.status}`);
   }
-  const data = await res.json();
+
   if (data.content && Array.isArray(data.content)) {
-    return data.content.filter(b => b.type === "text").map(b => b.text).join("");
+    return data.content
+      .filter(block => block.type === "text")
+      .map(block => block.text)
+      .join("");
   }
+
   throw new Error("Invalid response format");
 }
 
@@ -762,7 +740,7 @@ export default function App() {
   const [sideData, setSideData] = useState({benefits:[],facts:[]});
   const [showStage, setShowStage] = useState(false);
   const [chatStep, setChatStep] = useState("type");
-  const [apiKeyMissing, setApiKeyMissing] = useState(!ANTHROPIC_API_KEY);
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -806,7 +784,7 @@ export default function App() {
   }
 
   async function startChat(type){
-    if(apiKeyMissing){showToast("⚠️","Add your Anthropic API key to .env to enable AI","error");return;}
+    
     setSelType(type);const id=genId(type);setIdeaId(id);setMessages([]);setHistory([]);setRecord(null);setSideData({benefits:[],facts:[]});setShowStage(false);setStage("thought");setChatStep("chat");setIsTyping(true);
     const init=[{role:"user",content:`[SYSTEM]: ${buildSystemPrompt(type)}\n\nBegin now.`}];setHistory(init);
     try{const txt=await callClaude(init);setHistory([...init,{role:"assistant",content:txt}]);processAI(txt);}
@@ -854,13 +832,7 @@ export default function App() {
     <div style={{fontFamily:"system-ui,sans-serif",background:C.navy,minHeight:"100vh",color:C.white}}>
       <Header view={view} onNav={v=>{setView(v);if(v==="submit")setChatStep("type");}} staleCount={staleCount}/>
 
-      {/* API Key Banner */}
-      {apiKeyMissing && (
-        <div style={{background:"rgba(212,168,67,0.1)",border:"none",borderBottom:"1px solid rgba(212,168,67,0.25)",padding:"10px 20px",display:"flex",alignItems:"center",justifyContent:"center",gap:10,fontSize:12,color:C.gold}}>
-          <span>⚠️</span>
-          <span>AI features require an Anthropic API key. Add <code style={{background:"rgba(0,0,0,0.3)",padding:"1px 6px",borderRadius:4}}>VITE_ANTHROPIC_API_KEY=your_key</code> to a <code style={{background:"rgba(0,0,0,0.3)",padding:"1px 6px",borderRadius:4}}>.env</code> file and restart the dev server.</span>
-        </div>
-      )}
+      
 
       {/* FEED */}
       {view==="feed" && (
@@ -894,7 +866,7 @@ export default function App() {
             <div style={{textAlign:"center",padding:"40px 0 36px"}}>
               <div style={{fontSize:9,fontWeight:600,letterSpacing:2,textTransform:"uppercase",color:C.gold,marginBottom:14}}>AI-Powered Intake</div>
               <h1 style={{fontSize:"clamp(22px,4vw,38px)",fontWeight:800,lineHeight:1.15,marginBottom:14,letterSpacing:-1}}>What kind of idea do you have?</h1>
-              {apiKeyMissing && <div style={{background:"rgba(212,168,67,0.08)",border:"1px solid rgba(212,168,67,0.2)",borderRadius:10,padding:"12px 16px",maxWidth:500,margin:"0 auto 24px",fontSize:13,color:C.gold}}>⚠️ Add your Anthropic API key to enable the AI conversation.</div>}
+              
               <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,maxWidth:680,margin:"0 auto"}}>
                 {[{type:"process",icon:"⚙️",bg:"rgba(212,168,67,0.1)",title:"Process Improvement",desc:"Streamline workflows, reduce manual steps."},{type:"technology",icon:"💡",bg:"rgba(45,212,160,0.1)",title:"Technology / Automation",desc:"Replace manual work with apps or digital tools."},{type:"culture",icon:"🤝",bg:"rgba(200,216,240,0.1)",title:"Culture / People",desc:"Improve engagement, training, or collaboration."}].map(({type,icon,bg,title,desc})=>(
                   <div key={type} onClick={()=>startChat(type)} onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(212,168,67,0.5)";e.currentTarget.style.transform="translateY(-3px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";e.currentTarget.style.transform="none";}} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"22px 18px",cursor:"pointer",textAlign:"left",transition:"all 0.22s"}}>
