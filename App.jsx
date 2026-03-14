@@ -72,6 +72,23 @@ Previous notes: ${idea.followUpLog?.filter(l=>l.response).map(l=>l.summary).join
 Warmly greet the person, reference the idea by name, acknowledge it hasn't had updates, and ask ONE focused follow-up question about current status. 2-3 sentences max. Be warm and encouraging.`;
 }
 
+function getErrorMessage(err) {
+  if (!err) return "Unknown error";
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message || "Unknown error";
+  if (typeof err === "object") {
+    if (typeof err.message === "string") return err.message;
+    if (typeof err.error === "string") return err.error;
+    if (err.error && typeof err.error.message === "string") return err.error.message;
+    try {
+      return JSON.stringify(err);
+    } catch {
+      return "Unknown object error";
+    }
+  }
+  return String(err);
+}
+
 async function callClaude(messages) {
   const res = await fetch("/api/anthropic", {
     method: "POST",
@@ -79,7 +96,7 @@ async function callClaude(messages) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
+      model: "claude-3-haiku-20240307",
       max_tokens: 1000,
       messages: messages.map(m => ({
         role: m.role,
@@ -88,26 +105,33 @@ async function callClaude(messages) {
     })
   });
 
-  const data = await res.json().catch(() => ({}));
+  let data = {};
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
 
   if (!res.ok) {
     const message =
       data?.error?.message ||
-      data?.message ||
       data?.error ||
+      data?.message ||
       `HTTP ${res.status}`;
 
-    throw new Error(message);
+    throw new Error(
+      typeof message === "string" ? message : JSON.stringify(message)
+    );
   }
 
-  if (data.content && Array.isArray(data.content)) {
+  if (data?.content && Array.isArray(data.content)) {
     return data.content
       .filter(block => block.type === "text")
       .map(block => block.text)
       .join("");
   }
 
-  throw new Error("Invalid response format from Anthropic.");
+  throw new Error(`Unexpected response: ${JSON.stringify(data)}`);
 }
 
 async function generateSummary(ideaTitle, response) {
