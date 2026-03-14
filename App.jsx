@@ -13,7 +13,7 @@ const TYPE_ICONS={process:"⚙️",technology:"💡",culture:"🤝"};
 
 // ── ANTHROPIC API KEY ─────────────────────────────────────────────────────
 // Add your Anthropic API key here to enable the AI conversation
-const ANTHROPIC_API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY || "";
+
 
 function generateThumbnailSvg(type, title="") {
   const cfg = {
