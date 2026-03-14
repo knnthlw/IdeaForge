@@ -740,7 +740,7 @@ export default function App() {
   const [sideData, setSideData] = useState({benefits:[],facts:[]});
   const [showStage, setShowStage] = useState(false);
   const [chatStep, setChatStep] = useState("type");
-  const [apiKeyMissing, setApiKeyMissing] = useState(false);
+  const apiKeyMissing = false;
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
