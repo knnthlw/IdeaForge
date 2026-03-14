@@ -79,16 +79,25 @@ async function callClaude(messages) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 1000,
-      messages: messages.map(m => ({ role: m.role, content: m.content }))
+      messages: messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }))
     })
   });
 
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    throw new Error(data.error || data.message || `HTTP ${res.status}`);
+    const message =
+      data?.error?.message ||
+      data?.message ||
+      data?.error ||
+      `HTTP ${res.status}`;
+
+    throw new Error(message);
   }
 
   if (data.content && Array.isArray(data.content)) {
@@ -98,7 +107,7 @@ async function callClaude(messages) {
       .join("");
   }
 
-  throw new Error("Invalid response format");
+  throw new Error("Invalid response format from Anthropic.");
 }
 
 async function generateSummary(ideaTitle, response) {
