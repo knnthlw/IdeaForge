@@ -14,19 +14,27 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify(req.body)
     });
 
-    const data = await response.json().catch(() => ({}));
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
+    }
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error: data?.error?.message || "Anthropic request failed",
-        details: data
+        error:
+          data?.error?.message ||
+          data?.error ||
+          data?.message ||
+          `Anthropic request failed with ${response.status}`
       });
     }
 
     return res.status(200).json(data);
   } catch (error) {
     return res.status(500).json({
-      error: error.message || "Internal server error"
+      error: error?.message || "Internal server error"
     });
   }
 };
