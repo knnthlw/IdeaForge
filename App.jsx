@@ -822,7 +822,12 @@ export default function App() {
     
     setSelType(type);const id=genId(type);setIdeaId(id);setMessages([]);setHistory([]);setRecord(null);setSideData({benefits:[],facts:[]});setShowStage(false);setStage("thought");setChatStep("chat");setIsTyping(true);
     const init=[{role:"user",content:`[SYSTEM]: ${buildSystemPrompt(type)}\n\nBegin now.`}];setHistory(init);
-    try{const txt=await callClaude(init);setHistory([...init,{role:"assistant",content:txt}]);processAI(txt);}
+    try {
+  const txt = await callClaude(init);
+  console.log("AI first response:", txt, typeof txt);
+  setHistory([...init, { role: "assistant", content: txt }]);
+  processAI(txt);
+}
     catch (e) {
   setMessages([{ role: "ai", text: `⚠️ ${getErrorMessage(e)}` }]);
 }
