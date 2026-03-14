@@ -105,35 +105,29 @@ async function callClaude(messages) {
     })
   });
 
-  const data = await res.json().catch(() => ({}));
+  const data = await res.json();
 
   if (!res.ok) {
-    const message =
+    throw new Error(
       data?.error?.message ||
       data?.error ||
       data?.message ||
-      `HTTP ${res.status}`;
-    throw new Error(typeof message === "string" ? message : JSON.stringify(message));
+      `HTTP ${res.status}`
+    );
   }
 
-  console.log("Anthropic raw response:", data);
+  console.log("Claude response:", data);
 
-  if (Array.isArray(data?.content)) {
+  if (Array.isArray(data.content)) {
     const text = data.content
-      .filter(block => block && block.type === "text")
+      .filter(block => block.type === "text")
       .map(block => block.text)
       .join("");
 
-    if (typeof text === "string" && text.trim()) {
-      return text;
-    }
+    return text;
   }
 
-  if (typeof data?.completion === "string") {
-    return data.completion;
-  }
-
-  throw new Error(`Unexpected response shape: ${JSON.stringify(data)}`);
+  throw new Error("Unexpected Claude response format");
 }
 
 async function generateSummary(ideaTitle, response) {
