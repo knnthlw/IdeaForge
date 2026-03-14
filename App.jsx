@@ -829,11 +829,42 @@ export default function App() {
     setIsTyping(false);
   }
 
-  function processAI(txt){
-    const m=txt.match(/<RECORD>([\s\S]*?)<\/RECORD>/);
-    if(m){try{const r=JSON.parse(m[1]);setRecord(r);setSideData({benefits:r.hardBenefits||[],facts:r.capturedFacts||[]});const d=txt.replace(/<RECORD>[\s\S]*?<\/RECORD>/,"").trim();if(d)setMessages(p=>[...p,{role:"ai",text:d}]);setShowStage(true);return;}catch(e){}}
-    const d=txt.replace(/<RECORD>[\s\S]*?<\/RECORD>/,"").trim();if(d)setMessages(p=>[...p,{role:"ai",text:d}]);
+  function processAI(txt) {
+  const safeText =
+    typeof txt === "string"
+      ? txt
+      : txt && typeof txt === "object"
+        ? JSON.stringify(txt)
+        : String(txt);
+
+  const m = safeText.match(/<RECORD>([\s\S]*?)<\/RECORD>/);
+
+  if (m) {
+    try {
+      const r = JSON.parse(m[1]);
+      setRecord(r);
+      setSideData({
+        benefits: r.hardBenefits || [],
+        facts: r.capturedFacts || []
+      });
+
+      const displayText = safeText.replace(/<RECORD>[\s\S]*?<\/RECORD>/, "").trim();
+      if (displayText) {
+        setMessages(p => [...p, { role: "ai", text: displayText }]);
+      }
+
+      setShowStage(true);
+      return;
+    } catch (e) {
+      console.error("Failed to parse RECORD JSON:", e, m[1]);
+    }
   }
+
+  const displayText = safeText.replace(/<RECORD>[\s\S]*?<\/RECORD>/, "").trim();
+  if (displayText) {
+    setMessages(p => [...p, { role: "ai", text: displayText }]);
+  }
+}
 
   async function sendMessage(){
     const text=inputVal.trim();if(!text||isTyping)return;
