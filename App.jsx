@@ -821,7 +821,9 @@ export default function App() {
     setSelType(type);const id=genId(type);setIdeaId(id);setMessages([]);setHistory([]);setRecord(null);setSideData({benefits:[],facts:[]});setShowStage(false);setStage("thought");setChatStep("chat");setIsTyping(true);
     const init=[{role:"user",content:`[SYSTEM]: ${buildSystemPrompt(type)}\n\nBegin now.`}];setHistory(init);
     try{const txt=await callClaude(init);setHistory([...init,{role:"assistant",content:txt}]);processAI(txt);}
-    catch(e){setMessages([{role:"ai",text:`⚠️ ${e.message}`}]);}
+    catch (e) {
+  setMessages([{ role: "ai", text: `⚠️ ${getErrorMessage(e)}` }]);
+}
     setIsTyping(false);
   }
 
@@ -836,7 +838,9 @@ export default function App() {
     setInputVal("");setMessages(m=>[...m,{role:"user",text}]);
     const nh=[...history,{role:"user",content:text}];setHistory(nh);setIsTyping(true);
     try{const txt=await callClaude(nh);setHistory([...nh,{role:"assistant",content:txt}]);processAI(txt);}
-    catch(e){setMessages(m=>[...m,{role:"ai",text:`⚠️ ${e.message}`}]);}
+    catch (e) {
+  setMessages([{ role: "ai", text: `⚠️ ${getErrorMessage(e)}` }]);
+}
     setIsTyping(false);inputRef.current?.focus();
   }
 
