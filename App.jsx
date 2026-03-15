@@ -111,6 +111,16 @@ async function callClaude(messages) {
   });
 
   const data = await res.json();
+  console.log("Claude response:", data);
+
+if (!res.ok) {
+  throw new Error(
+    data?.error?.message ||
+    data?.error ||
+    data?.message ||
+    `HTTP ${res.status}`
+  );
+}
 
   if (!res.ok) {
     throw new Error(
