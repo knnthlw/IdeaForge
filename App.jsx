@@ -112,6 +112,7 @@ async function callClaude(messages) {
 
   const data = await res.json();
   console.log("Claude response:", data);
+  console.log("Claude token usage:", data.usage);
 
 if (!res.ok) {
   throw new Error(
