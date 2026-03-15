@@ -99,9 +99,14 @@ async function callClaude(messages) {
       model: "claude-3-haiku-20240307",
       max_tokens: 1000,
       messages: messages.map(m => ({
-        role: m.role,
-        content: m.content
-      }))
+  role: m.role,
+  content: [
+    {
+      type: "text",
+      text: m.content
+    }
+  ]
+}))
     })
   });
 
