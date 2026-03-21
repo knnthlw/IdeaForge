@@ -97,7 +97,7 @@ async function callClaude(messages) {
     },
     body: JSON.stringify({
       model: "claude-3-haiku-20240307",
-      max_tokens: 1000,
+      max_tokens: 450,
       messages: messages.map(m => ({
   role: m.role,
   content: [
