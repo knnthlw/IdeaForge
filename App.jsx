@@ -11,6 +11,14 @@ const TYPE_LABELS={process:"Process Improvement",technology:"Technology / Automa
 const TYPE_COLORS={process:C.gold,technology:C.green,culture:C.ice};
 const TYPE_ICONS={process:"⚙️",technology:"💡",culture:"🤝"};
 
+const [isMobile, setIsMobile] = useState(window.innerWidth < 900);
+
+useEffect(() => {
+  const onResize = () => setIsMobile(window.innerWidth < 900);
+  window.addEventListener("resize", onResize);
+  return () => window.removeEventListener("resize", onResize);
+}, []);
+
 function generateThumbnailSvg(type, title="") {
   const cfg = {
     process:{ bg1:"#1A1000", bg2:"#3A2800", accent:C.gold, label:"PROCESS" },
@@ -952,7 +960,13 @@ export default function App() {
               <div style={{fontSize:9,fontWeight:600,letterSpacing:2,textTransform:"uppercase",color:C.gold,marginBottom:14}}>AI-Powered Intake</div>
               <h1 style={{fontSize:"clamp(22px,4vw,38px)",fontWeight:800,lineHeight:1.15,marginBottom:14,letterSpacing:-1}}>What kind of idea do you have?</h1>
               
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14,maxWidth:680,margin:"0 auto"}}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 280px",
+                    gap: 16
+                  }}
+                >
                 {[{type:"process",icon:"⚙️",bg:"rgba(212,168,67,0.1)",title:"Process Improvement",desc:"Streamline workflows, reduce manual steps."},{type:"technology",icon:"💡",bg:"rgba(45,212,160,0.1)",title:"Technology / Automation",desc:"Replace manual work with apps or digital tools."},{type:"culture",icon:"🤝",bg:"rgba(200,216,240,0.1)",title:"Culture / People",desc:"Improve engagement, training, or collaboration."}].map(({type,icon,bg,title,desc})=>(
                   <div key={type} onClick={()=>startChat(type)} onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(212,168,67,0.5)";e.currentTarget.style.transform="translateY(-3px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(255,255,255,0.09)";e.currentTarget.style.transform="none";}} style={{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,padding:"22px 18px",cursor:"pointer",textAlign:"left",transition:"all 0.22s"}}>
                     <div style={{width:42,height:42,borderRadius:11,background:bg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:21,marginBottom:14}}>{icon}</div>
@@ -965,7 +979,17 @@ export default function App() {
           )}
           {chatStep==="chat" && (
             <div style={{display:"grid",gridTemplateColumns:"1fr 280px",gap:16}}>
-              <div style={{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.09)",borderRadius:16,display:"flex",flexDirection:"column",height:575,overflow:"hidden"}}>
+              <div
+                  style={{
+                    background: "rgba(255,255,255,0.03)",
+                    border: "1px solid rgba(255,255,255,0.09)",
+                    borderRadius: 16,
+                    display: "flex",
+                    flexDirection: "column",
+                    height: isMobile ? "70vh" : 575,
+                    overflow: "hidden"
+                  }}
+                >
                 <div style={{padding:"13px 17px",borderBottom:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",justifyContent:"space-between",background:"rgba(255,255,255,0.02)"}}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:32,height:32,background:`linear-gradient(135deg,${C.gold},${C.goldLight})`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:C.navy,fontWeight:700}}>✦</div><div><div style={{fontSize:13,fontWeight:600,color:C.white}}>IdeaForge AI</div><div style={{fontSize:11,color:C.gray}}>Building your {TYPE_LABELS[selType]} record</div></div></div>
                   <div style={{display:"flex",gap:5}}>{[0,1,2,3,4,5].map(i=><div key={i} style={{width:6,height:6,borderRadius:"50%",transition:"all 0.3s",background:i<msgCount?C.green:i===msgCount?C.gold:"rgba(255,255,255,0.15)",transform:i===msgCount?"scale(1.4)":"none"}}/>)}</div>
